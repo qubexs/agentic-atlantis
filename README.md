@@ -392,17 +392,17 @@ Your support helps keep this project alive and improving!
 
 **Bitcoin (BTC)**
 ```
-bc1qxy2kxdy0na3mprymjp7u4ljvyh4kjrm8r4hc3r
+bc1q0nsw49yanc2yam3nlxvyumv4pegyf38nhwveea
 ```
 
 **Ethereum (ETH)**
 ```
-0x7427dC08d4A9b0dE13D1f3E7c1d3F4d5e6f7g8h9
+0x1DD52bd722E18a7af5A09C0A96Db3FDCe056BE5a
 ```
 
 **Solana (SOL)**
 ```
-7xKXtg2wG2p9m8nV4t5r6y7z8A9b0c1d2e3f4g5h6i7j8k9l0
+A6Zyuhx8tzXpuuWoCrxRKcCVAM2qsBFVh254ikgo31Hi
 ```
 
 **Ripple (XRP)**
