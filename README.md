@@ -11,6 +11,7 @@ A powerful, AI-enhanced desktop IDE built with Electron, React, and Vite. Design
 - **Code Editor** - Full-featured code editing with syntax highlighting (Monaco Editor)
 - **Multi-tab Editor** - Work on multiple files simultaneously
 - **Integrated Terminal** - Built-in terminal with full shell support
+- **Settings Panel** - Comprehensive configuration for all IDE features
 
 ### AI-Powered Features
 - **AI Chat Interface** - Conversational AI assistant for code help, debugging, and explanations
@@ -21,10 +22,33 @@ A powerful, AI-enhanced desktop IDE built with Electron, React, and Vite. Design
   - Ollama (Local AI - Llama3, Mistral, CodeLlama, etc.)
   - Custom/OpenAI-compatible providers
 - **Model Selection** - Choose and switch between available models per provider
+- **Provider Configuration** - Full provider.json support for custom AI endpoints
 
 ### Workflow & Automation
 - **Workflow Editor** - Visual workflow creation with node-based interface
 - **MCP (Model Context Protocol)** - Integration support for extended AI capabilities
+- **Automation Scripts** - Write and execute automation scripts
+
+### Advanced CLI & Extensibility
+- **Powerful CLI** - Command-line interface for all IDE operations
+- **LSP (Language Server Protocol)** - Full LSP client support for:
+  - IntelliSense & autocomplete
+  - Code navigation (Go to definition, Find references)
+  - Diagnostics (errors, warnings, linting)
+  - Refactoring tools
+  - Multi-language support (JavaScript, TypeScript, Python, Rust, Go, C++, etc.)
+- **MCP Integration** - Connect to Model Context Protocol servers:
+  - File system operations
+  - Git integration
+  - Database tools
+  - Custom AI tools
+- **Plugin System** - Extend IDE functionality:
+  - Theme plugins
+  - Language support
+  - Tool integrations
+  - Custom commands
+- **Extension API** - Build and load custom extensions
+- **Hot Reload** - Develop extensions without restarting
 
 ## Installation
 
@@ -67,6 +91,69 @@ npx electron-builder --mac
 npx electron-builder --linux
 ```
 
+## CLI Commands
+
+The IDE includes a powerful command-line interface:
+
+### File Operations
+```bash
+atlantis file open <path>          # Open a file
+atlantis file save                # Save current file
+atlantis file close               # Close current tab
+atlantis file new                 # Create new file
+```
+
+### AI Commands
+```bash
+atlantis ai chat                  # Start AI chat
+atlantis ai provider list         # List available providers
+atlantis ai provider set <name>   # Set active provider
+atlantis ai model set <model>     # Set active model
+atlantis ai config                # Open AI settings
+```
+
+### Terminal Commands
+```bash
+atlantis term new                 # Create new terminal
+atlantis term kill <id>           # Kill terminal session
+atlantis term list                # List active terminals
+```
+
+### Extension Commands
+```bash
+atlantis ext list                 # List installed extensions
+atlantis ext install <name>      # Install extension
+atlantis ext uninstall <name>    # Uninstall extension
+atlantis ext search <query>       # Search extensions
+atlantis ext dev                  # Development mode
+```
+
+### MCP Commands
+```bash
+atlantis mcp list                 # List MCP servers
+atlantis mcp add <name> <config> # Add MCP server
+atlantis mcp remove <name>       # Remove MCP server
+atlantis mcp start <name>        # Start MCP server
+atlantis mcp stop <name>         # Stop MCP server
+```
+
+### LSP Commands
+```bash
+atlantis lsp list                 # List language servers
+atlantis lsp start <lang>         # Start LSP for language
+atlantis lsp stop <lang>          # Stop LSP for language
+atlantis lsp status               # Show LSP status
+atlantis lsp install <lang>      # Install language server
+```
+
+### Settings Commands
+```bash
+atlantis settings open            # Open settings
+atlantis settings get <key>       # Get setting value
+atlantis settings set <key> <val> # Set setting value
+atlantis settings reset           # Reset to defaults
+```
+
 ## Configuration
 
 ### AI Provider Setup
@@ -103,7 +190,92 @@ Example provider.json format:
 }
 ```
 
-### Keyboard Shortcuts
+### LSP Configuration
+
+Configure language servers in settings:
+
+```json
+{
+  "lsp": {
+    "typescript": {
+      "enable": true,
+      "command": "typescript-language-server",
+      "args": ["--stdio"]
+    },
+    "python": {
+      "enable": true,
+      "command": "pylsp"
+    },
+    "rust": {
+      "enable": true,
+      "command": "rust-analyzer"
+    }
+  }
+}
+```
+
+### MCP Configuration
+
+```json
+{
+  "mcp": {
+    "servers": {
+      "filesystem": {
+        "command": "npx",
+        "args": ["@modelcontextprotocol/server-filesystem", "/path/to/directory"]
+      },
+      "git": {
+        "command": "npx", 
+        "args": ["@modelcontextprotocol/server-github"]
+      }
+    }
+  }
+}
+```
+
+### Plugin Configuration
+
+```json
+{
+  "plugins": {
+    "enabled": ["theme-dark", "format-prettier", "git-integration"],
+    "paths": ["./my-plugins"]
+  }
+}
+```
+
+## Extension Development
+
+Create your own extensions:
+
+```typescript
+// my-extension/index.ts
+import { Extension } from '@atlantis/api';
+
+export default {
+  name: 'my-extension',
+  version: '1.0.0',
+  
+  activate() {
+    // Register commands
+    this.registerCommand('my-command', () => {
+      console.log('Hello from my extension!');
+    });
+    
+    // Add UI elements
+    this.addStatusBarItem({
+      text: 'My Extension',
+      command: 'my-command'
+    });
+  },
+  
+  deactivate() {
+    // Cleanup
+  }
+} satisfies Extension;
+```
+
+## Keyboard Shortcuts
 
 | Action | Shortcut |
 |--------|----------|
@@ -118,6 +290,8 @@ Example provider.json format:
 | Navigate back | Ctrl+[ |
 | Navigate forward | Ctrl+] |
 | Close tab | Ctrl+W |
+| Quick open | Ctrl+P |
+| Find in files | Ctrl+Shift+F |
 
 ## Tech Stack
 
@@ -136,21 +310,77 @@ Example provider.json format:
 agentic-atlantis/
 ├── electron/           # Electron main & preload scripts
 │   ├── main/          # Main process
+│   │   ├── index.ts   # Main entry
+│   │   ├── ipc.ts     # IPC handlers
+│   │   ├── cli.ts     # CLI implementation
+│   │   ├── mcp.ts     # MCP client
+│   │   └── lsp.ts     # LSP client
 │   └── preload/       # Preload scripts
-├── src/              # React source code
-│   ├── components/   # React components
-│   ├── store/        # Zustand state management
-│   ├── App.tsx       # Main app component
-│   └── main.tsx     # App entry point
-├── dist/             # Built frontend
-├── dist-electron/    # Built Electron scripts
-├── release/          # Packaged applications
-└── package.json     # Project dependencies
+├── src/               # React source code
+│   ├── components/    # React components
+│   │   ├── Editor/    # Code editor
+│   │   ├── Terminal/  # Terminal
+│   │   ├── Chat/      # AI chat
+│   │   ├── Workflow/  # Workflow editor
+│   │   └── Settings/  # Settings panel
+│   ├── store/         # Zustand state management
+│   ├── services/      # LSP, MCP services
+│   ├── extensions/    # Extension system
+│   ├── App.tsx        # Main app component
+│   └── main.tsx       # App entry point
+├── dist/              # Built frontend
+├── dist-electron/     # Built Electron scripts
+├── release/           # Packaged applications
+├── packages/          # Extension packages
+└── package.json      # Project dependencies
 ```
+
+## Supported Languages
+
+### Native Support
+- JavaScript / TypeScript
+- Python
+- Rust
+- Go
+- C / C++
+- Java
+- HTML / CSS
+- JSON / YAML
+- Markdown
+
+### LSP-Enabled Languages
+- All languages with Language Server Protocol support
+- Auto-detection and manual selection
+- Custom language configurations
+
+## MCP Servers
+
+Built-in MCP server support for:
+- **Filesystem** - File operations
+- **Git** - Version control operations
+- **Database** - Database queries
+- **Search** - Code search
+- **Custom** - User-defined MCP servers
 
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
+### Development
+
+```bash
+# Run in development mode
+npm run dev
+
+# Run tests
+npm run test
+
+# Lint code
+npm run lint
+
+# Type check
+npm run typecheck
+```
 
 ## Support
 
