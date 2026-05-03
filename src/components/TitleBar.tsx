@@ -1,4 +1,4 @@
-import { Bot, ChevronDown, Minus, X, Maximize2, Shrink } from 'lucide-react';
+import { Bot, ChevronDown, Minus, X, Square, Minimize2 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 
 interface Tab {
@@ -112,7 +112,7 @@ export default function TitleBar({
           <Minus size={14} />
         </button>
         <button className="titlebar-btn" onClick={handleMaximize} title={isMaximized ? "Restore" : "Maximize"}>
-          {isMaximized ? <Shrink size={12} /> : <Maximize2 size={12} />}
+          {isMaximized ? <Minimize2 size={12} /> : <Square size={12} />}
         </button>
         <button className="titlebar-btn titlebar-btn-close" onClick={handleClose} title="Close">
           <X size={14} />

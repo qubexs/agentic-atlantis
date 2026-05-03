@@ -4,15 +4,15 @@ import remarkGfm from 'remark-gfm';
 import { Send, Trash2, Bot } from 'lucide-react';
 import { useAppStore } from '../store';
 
-const PROVIDERS = [
-  { id: 'openai', name: 'OpenAI', baseUrl: 'https://api.openai.com/v1', models: ['gpt-4o', 'gpt-4o-mini', 'gpt-3.5-turbo'] },
-  { id: 'anthropic', name: 'Anthropic', baseUrl: 'https://api.anthropic.com', models: ['claude-3-5-sonnet-20241022', 'claude-3-haiku-20240307'] },
-  { id: 'google', name: 'Google', baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai', models: ['gemini-2.0-flash', 'gemini-1.5-pro'] },
-  { id: 'ollama', name: 'Ollama (Local)', baseUrl: 'http://localhost:11434/v1', models: ['llama3', 'mistral', 'codellama', 'qwen2.5-coder'] },
+const DEFAULT_PROVIDERS = [
+  { id: 'openai', name: 'OpenAI', baseUrl: 'https://api.openai.com/v1', models: { 'gpt-4o': { name: 'GPT-4o' }, 'gpt-4o-mini': { name: 'GPT-4o Mini' }, 'gpt-3.5-turbo': { name: 'GPT-3.5 Turbo' } } },
+  { id: 'anthropic', name: 'Anthropic', baseUrl: 'https://api.anthropic.com', models: { 'claude-3-5-sonnet-20241022': { name: 'Claude 3.5 Sonnet' }, 'claude-3-haiku-20240307': { name: 'Claude 3 Haiku' } } },
+  { id: 'google', name: 'Google Gemini', baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai', models: { 'gemini-2.0-flash': { name: 'Gemini 2.0 Flash' }, 'gemini-1.5-pro': { name: 'Gemini 1.5 Pro' } } },
+  { id: 'ollama', name: 'Ollama (Local)', baseUrl: 'http://localhost:11434/v1', models: { 'llama3': { name: 'Llama 3' }, 'mistral': { name: 'Mistral' }, 'codellama': { name: 'CodeLlama' }, 'qwen2.5-coder': { name: 'Qwen 2.5 Coder' } } },
 ];
 
 export default function Chat() {
-  const { chatHistory, addChatMessage, clearChat, activeFile, fileContent, aiSettings, setAiSettings } = useAppStore();
+  const { chatHistory, addChatMessage, clearChat, activeFile, fileContent, aiSettings, setAiSettings, customProviders } = useAppStore();
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -22,7 +22,9 @@ export default function Chat() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatHistory, loading]);
 
-  const selectedProvider = PROVIDERS.find((p) => p.id === aiSettings.provider) ?? PROVIDERS[0];
+  const allProviders = [...DEFAULT_PROVIDERS, ...customProviders];
+  const selectedProvider = allProviders.find((p) => p.id === aiSettings.provider) ?? DEFAULT_PROVIDERS[0];
+  const currentModelName = selectedProvider.models[aiSettings.model]?.name || aiSettings.model;
 
   const handleSend = async () => {
     if (!input.trim() || loading) return;
@@ -38,8 +40,8 @@ export default function Chat() {
         systemPrompt += `\n\nThe user is currently editing ${activeFile.name}:\n\`\`\`\n${fileContent.slice(0, 3000)}\n\`\`\``;
       }
 
-      const baseUrl = aiSettings.baseUrl || selectedProvider.baseUrl;
-      const model = aiSettings.model || selectedProvider.models[0];
+      const baseUrl = aiSettings.baseUrl || selectedProvider.options?.baseURL || selectedProvider.baseUrl;
+      const model = aiSettings.model || Object.keys(selectedProvider.models)[0];
 
       const messages = [
         { role: 'system', content: systemPrompt },
@@ -94,12 +96,13 @@ export default function Chat() {
           <select
             value={aiSettings.provider}
             onChange={(e) => {
-              const p = PROVIDERS.find((p) => p.id === e.target.value)!;
-              setAiSettings({ provider: e.target.value as never, baseUrl: p.baseUrl, model: p.models[0] });
+              const p = allProviders.find((p) => p.id === e.target.value)!;
+              const firstModel = Object.keys(p.models)[0];
+              setAiSettings({ provider: e.target.value, baseUrl: p.options?.baseURL || p.baseUrl, model: firstModel });
             }}
             style={{ fontSize: 11, padding: '3px 6px' }}
           >
-            {PROVIDERS.map((p) => (
+            {allProviders.map((p) => (
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}
           </select>
@@ -108,8 +111,8 @@ export default function Chat() {
             onChange={(e) => setAiSettings({ model: e.target.value })}
             style={{ fontSize: 11, padding: '3px 6px', minWidth: 80 }}
           >
-            {selectedProvider.models.map((m) => (
-              <option key={m} value={m}>{m}</option>
+            {Object.entries(selectedProvider.models).map(([id, config]) => (
+              <option key={id} value={id}>{config.name}</option>
             ))}
           </select>
           {chatHistory.length > 0 && (
@@ -163,7 +166,9 @@ export default function Chat() {
         ) : (
           chatHistory.map((msg, i) => (
             <div key={i} className={`chat-message ${msg.role}`}>
-              <div className="chat-message-label">{msg.role === 'user' ? 'You' : 'AI'}</div>
+              <div className="chat-message-label">
+                {msg.role === 'user' ? 'You' : `AI (${currentModelName})`}
+              </div>
               <div className="chat-message-body">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
               </div>

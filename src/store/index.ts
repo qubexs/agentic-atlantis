@@ -15,10 +15,21 @@ export interface ChatMessage {
 }
 
 export interface AiSettings {
-  provider: 'openai' | 'anthropic' | 'google' | 'ollama' | 'custom';
+  provider: string;
   apiKey: string;
   baseUrl: string;
   model: string;
+}
+
+export interface ProviderConfig {
+  id: string;
+  name: string;
+  npm?: string;
+  options?: {
+    baseURL?: string;
+    apiKey?: string;
+  };
+  models: Record<string, { name: string }>;
 }
 
 interface AppState {
@@ -32,6 +43,8 @@ interface AppState {
   aiSettings: AiSettings;
   terminalOutput: string[];
   activePanel: string;
+  providerJson: string;
+  customProviders: ProviderConfig[];
 
   setWorkspace: (path: string) => void;
   setFiles: (files: FileEntry[]) => void;
@@ -46,6 +59,7 @@ interface AppState {
   addTerminalOutput: (output: string) => void;
   clearTerminal: () => void;
   setActivePanel: (panel: string) => void;
+  setProviderJson: (json: string) => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -64,6 +78,21 @@ export const useAppStore = create<AppState>((set) => ({
   },
   terminalOutput: [],
   activePanel: 'explorer',
+  providerJson: `[
+  "provider": {
+    "zen": {
+      "npm": "@ai-sdk/openai-compatible",
+      "options": {
+        "baseURL": "https://opencode.ai/zen/v1",
+        "apiKey": "{env:ZEN_API_KEY}"
+      },
+      "models": {
+        "bigpickle": { "name": "Big Pickle" }
+      }
+    }
+  }
+]`,
+  customProviders: [],
 
   setWorkspace: (path) => set({ currentWorkspace: path }),
   setFiles: (files) => set({ files }),
@@ -95,4 +124,26 @@ export const useAppStore = create<AppState>((set) => ({
     set((state) => ({ terminalOutput: [...state.terminalOutput, output] })),
   clearTerminal: () => set({ terminalOutput: [] }),
   setActivePanel: (panel) => set({ activePanel: panel }),
+  setProviderJson: (json) => {
+    try {
+      const parsed = JSON.parse(json);
+      const providers: ProviderConfig[] = [];
+      
+      if (parsed.provider) {
+        Object.entries(parsed.provider).forEach(([id, config]: [string, any]) => {
+          providers.push({
+            id,
+            name: id.charAt(0).toUpperCase() + id.slice(1),
+            npm: config.npm,
+            options: config.options,
+            models: config.models || {},
+          });
+        });
+      }
+      
+      set({ providerJson: json, customProviders: providers });
+    } catch {
+      set({ providerJson: json, customProviders: [] });
+    }
+  },
 }));

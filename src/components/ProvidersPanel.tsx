@@ -1,40 +1,51 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Cpu } from 'lucide-react';
-import { useAppStore } from '../store';
+import { useAppStore, ProviderConfig } from '../store';
 
 interface ProviderItem {
   id: string;
   name: string;
-  models: string[];
+  models: Record<string, { name: string }>;
   status: 'active' | 'available' | 'offline';
   badge: string;
 }
 
-const ALL_PROVIDERS: ProviderItem[] = [
-  { id: 'openai', name: 'OpenAI', models: ['gpt-4o', 'gpt-4o-mini', 'gpt-3.5-turbo'], status: 'available', badge: 'Cloud' },
-  { id: 'anthropic', name: 'Anthropic', models: ['claude-3-5-sonnet-20241022', 'claude-3-haiku-20240307'], status: 'available', badge: 'Cloud' },
-  { id: 'google', name: 'Google Gemini', models: ['gemini-2.0-flash', 'gemini-1.5-pro'], status: 'available', badge: 'Cloud' },
-  { id: 'ollama', name: 'Ollama', models: ['llama3', 'mistral', 'codellama', 'qwen2.5-coder'], status: 'offline', badge: 'Local' },
+const DEFAULT_PROVIDERS: ProviderItem[] = [
+  { id: 'openai', name: 'OpenAI', models: { 'gpt-4o': { name: 'GPT-4o' }, 'gpt-4o-mini': { name: 'GPT-4o Mini' }, 'gpt-3.5-turbo': { name: 'GPT-3.5 Turbo' } }, status: 'available', badge: 'Cloud' },
+  { id: 'anthropic', name: 'Anthropic', models: { 'claude-3-5-sonnet-20241022': { name: 'Claude 3.5 Sonnet' }, 'claude-3-haiku-20240307': { name: 'Claude 3 Haiku' } }, status: 'available', badge: 'Cloud' },
+  { id: 'google', name: 'Google Gemini', models: { 'gemini-2.0-flash': { name: 'Gemini 2.0 Flash' }, 'gemini-1.5-pro': { name: 'Gemini 1.5 Pro' } }, status: 'available', badge: 'Cloud' },
+  { id: 'ollama', name: 'Ollama', models: { 'llama3': { name: 'Llama 3' }, 'mistral': { name: 'Mistral' }, 'codellama': { name: 'CodeLlama' }, 'qwen2.5-coder': { name: 'Qwen 2.5 Coder' } }, status: 'offline', badge: 'Local' },
 ];
 
 export default function ProvidersPanel() {
-  const { aiSettings, setAiSettings } = useAppStore();
-  const [providers, setProviders] = useState<ProviderItem[]>(
-    ALL_PROVIDERS.map((p) => ({
+  const { aiSettings, setAiSettings, customProviders } = useAppStore();
+  const [providers, setProviders] = useState<ProviderItem[]>([]);
+
+  useEffect(() => {
+    const all = [...DEFAULT_PROVIDERS, ...customProviders.map((p: ProviderConfig) => ({
+      id: p.id,
+      name: p.name || p.id,
+      models: p.models || {},
+      status: p.id === aiSettings.provider ? 'active' as const : 'available' as const,
+      badge: 'Custom',
+    }))];
+    
+    setProviders(all.map(p => ({
       ...p,
-      status: p.id === aiSettings.provider ? 'active' : p.status,
-    }))
-  );
+      status: p.id === aiSettings.provider ? 'active' as const : p.status === 'active' ? 'available' as const : p.status,
+    })));
+  }, [customProviders, aiSettings.provider]);
 
   const activate = (providerId: string) => {
-    const p = ALL_PROVIDERS.find((p) => p.id === providerId)!;
+    const p = providers.find((p) => p.id === providerId);
+    const firstModel = p ? Object.keys(p.models)[0] : '';
     setProviders((prev) =>
       prev.map((item) => ({
         ...item,
         status: item.id === providerId ? 'active' : item.status === 'active' ? 'available' : item.status,
       }))
     );
-    setAiSettings({ provider: providerId as never, model: p.models[0] });
+    setAiSettings({ provider: providerId, model: firstModel });
   };
 
   return (
@@ -78,13 +89,13 @@ export default function ProvidersPanel() {
 
             <select
               style={{ fontSize: 11, padding: '3px 6px', width: '100%' }}
-              value={p.id === aiSettings.provider ? aiSettings.model : p.models[0]}
+              value={p.id === aiSettings.provider ? aiSettings.model : Object.keys(p.models)[0]}
               onChange={(e) => {
                 if (p.id === aiSettings.provider) setAiSettings({ model: e.target.value });
               }}
               disabled={p.id !== aiSettings.provider}
             >
-              {p.models.map((m) => <option key={m} value={m}>{m}</option>)}
+              {Object.entries(p.models).map(([id, config]) => <option key={id} value={id}>{config.name}</option>)}
             </select>
 
             {p.status !== 'active' && (
