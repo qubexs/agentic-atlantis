@@ -1,6 +1,6 @@
-# Agentic Atlantis IDE
+# Agentic Atlantis IDE CLI
 
-A powerful, AI-enhanced desktop IDE built with Electron, React, and Vite. Designed for modern developers who want intelligent coding assistance directly in their development environment.
+A powerful, AI-enhanced desktop IDE with a powerful CLI built with Electron, React, and Vite. Designed for modern developers who want intelligent coding assistance directly in their development environment.
 
 ![Agentic Atlantis IDE](./screenshot.png)
 
