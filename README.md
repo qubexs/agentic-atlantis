@@ -407,8 +407,7 @@ bc1qxy2kxdy0na3mprymjp7u4ljvyh4kjrm8r4hc3r
 
 **Ripple (XRP)**
 ```
-rQ6fKv7v9f3r5h8j2k4m6n8p0q1r2s3t4u5v6w7x8y9z
-Tag: 123456789
+rMkSEQHDxnTCL7kX9puG81c7MKBL6PcWMu
 ```
 
 ---
