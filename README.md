@@ -405,6 +405,12 @@ bc1qxy2kxdy0na3mprymjp7u4ljvyh4kjrm8r4hc3r
 7xKXtg2wG2p9m8nV4t5r6y7z8A9b0c1d2e3f4g5h6i7j8k9l0
 ```
 
+**Ripple (XRP)**
+```
+rQ6fKv7v9f3r5h8j2k4m6n8p0q1r2s3t4u5v6w7x8y9z
+Tag: 123456789
+```
+
 ---
 
 Built with ❤️ by the Agentic Atlantis Team
