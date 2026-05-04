@@ -77,6 +77,7 @@ function createWindow() {
     minWidth: 800,
     minHeight: 600,
     show: false,
+    titleBarStyle: 'hidden',
     webPreferences: {
       preload: path.join(app.getAppPath(), 'dist-electron/preload/index.js'),
       contextIsolation: true,
@@ -143,6 +144,14 @@ app.on('window-all-closed', () => {
 });
 
 // IPC Handlers
+
+// Dialog
+ipcMain.handle('dialog:openDirectory', async () => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    properties: ['openDirectory']
+  });
+  return result.canceled ? null : result.filePaths[0];
+});
 
 // File System
 ipcMain.handle('fs:readDir', async (_event, dirPath: string) => {

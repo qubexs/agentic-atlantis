@@ -45,6 +45,7 @@ interface AppState {
   activePanel: string;
   providerJson: string;
   customProviders: ProviderConfig[];
+  searchQuery: string;
 
   setWorkspace: (path: string) => void;
   setFiles: (files: FileEntry[]) => void;
@@ -60,6 +61,7 @@ interface AppState {
   clearTerminal: () => void;
   setActivePanel: (panel: string) => void;
   setProviderJson: (json: string) => void;
+  setSearchQuery: (query: string) => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -93,6 +95,7 @@ export const useAppStore = create<AppState>((set) => ({
   }
 ]`,
   customProviders: [],
+  searchQuery: '',
 
   setWorkspace: (path) => set({ currentWorkspace: path }),
   setFiles: (files) => set({ files }),
@@ -146,4 +149,5 @@ export const useAppStore = create<AppState>((set) => ({
       set({ providerJson: json, customProviders: [] });
     }
   },
+  setSearchQuery: (query) => set({ searchQuery: query }),
 }));

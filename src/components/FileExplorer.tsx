@@ -1,6 +1,8 @@
-import { useState } from 'react';
-import { Folder, FolderOpen, FileText, ChevronRight, ChevronDown } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Folder, FolderOpen, FileText, ChevronRight, ChevronDown, RefreshCw, Plus, X } from 'lucide-react';
 import { useAppStore, FileEntry } from '../store';
+
+const api = (window as any).api;
 
 const DEMO_FILES: FileEntry[] = [
   {
@@ -35,13 +37,22 @@ function FileTree({ entries, depth = 0 }: FileTreeProps) {
   const { activeFile, openFile, setFileContent } = useAppStore();
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
-  const handleClick = (entry: FileEntry) => {
+  const handleClick = async (entry: FileEntry) => {
     if (entry.isDirectory) {
       setExpanded((prev) => ({ ...prev, [entry.path]: !prev[entry.path] }));
     } else {
-      openFile(entry);
-      if (entry.content !== undefined) {
+      if (entry.content) {
+        openFile(entry);
         setFileContent(entry.content);
+      } else if (api?.invoke && entry.path) {
+        try {
+          const result: any = await api.invoke('fs:readFile', entry.path);
+          const content = result?.content || '';
+          openFile({ ...entry, content });
+          setFileContent(content);
+        } catch (err) {
+          console.error('Failed to read file:', err);
+        }
       }
     }
   };
@@ -83,12 +94,62 @@ function FileTree({ entries, depth = 0 }: FileTreeProps) {
 }
 
 export default function FileExplorer() {
-  const { currentWorkspace, files, setWorkspace, setFiles } = useAppStore();
-  const [inputPath, setInputPath] = useState(currentWorkspace || '/demo');
+  const { currentWorkspace, files, setWorkspace, setFiles, activeFile, openFile, setFileContent } = useAppStore();
+  const [inputPath, setInputPath] = useState(currentWorkspace || '');
+  const [loading, setLoading] = useState(false);
 
-  const handleOpenFolder = () => {
-    setWorkspace(inputPath);
-    setFiles(DEMO_FILES);
+  const handleBrowseFolder = async () => {
+    if (!api?.invoke) return;
+    try {
+      const path = await api.invoke('dialog:openDirectory');
+      if (path) {
+        setInputPath(path);
+        setLoading(true);
+        const fileList = await api.invoke('fs:readDir', path);
+        setWorkspace(path);
+        setFiles(fileList || []);
+        setLoading(false);
+      }
+    } catch (err) {
+      console.error('Failed to open folder:', err);
+      setLoading(false);
+    }
+  };
+
+  const handleOpenPath = async () => {
+    if (!inputPath.trim()) return;
+    setLoading(true);
+    try {
+      if (api?.invoke) {
+        const fileList = await api.invoke('fs:readDir', inputPath);
+        setWorkspace(inputPath);
+        setFiles(fileList || []);
+      } else {
+        setWorkspace(inputPath);
+        setFiles(DEMO_FILES);
+      }
+    } catch {
+      setWorkspace(inputPath);
+      setFiles(DEMO_FILES);
+    }
+    setLoading(false);
+  };
+
+  const handleFileClick = async (entry: FileEntry) => {
+    if (entry.isDirectory) return;
+    if (entry.content) {
+      openFile(entry);
+      setFileContent(entry.content);
+    } else if (api?.invoke && entry.path) {
+      try {
+        const result: any = await api.invoke('fs:readFile', entry.path);
+        const content = result?.content || '';
+        openFile({ ...entry, content });
+        setFileContent(content);
+      } catch (err) {
+        console.error('Failed to read file:', err);
+      }
+    }
   };
 
   const displayFiles = files.length > 0 ? files : DEMO_FILES;
@@ -101,14 +162,25 @@ export default function FileExplorer() {
           className="explorer-path-input"
           value={inputPath}
           onChange={(e) => setInputPath(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleOpenFolder()}
+          onKeyDown={(e) => e.key === 'Enter' && handleOpenPath()}
           placeholder="Folder path..."
         />
-        <button className="explorer-open-btn" onClick={handleOpenFolder}>
-          Open
+        <button 
+          className="explorer-open-btn" 
+          onClick={handleBrowseFolder}
+          title="Browse folder"
+        >
+          <Folder size={12} />
+        </button>
+        <button 
+          className="explorer-open-btn" 
+          onClick={handleOpenPath}
+          disabled={loading || !inputPath.trim()}
+        >
+          {loading ? <RefreshCw size={12} className="spin" /> : 'Open'}
         </button>
       </div>
-      {displayWorkspace && (
+      {currentWorkspace && (
         <div
           style={{
             padding: '5px 10px',
@@ -121,7 +193,7 @@ export default function FileExplorer() {
             whiteSpace: 'nowrap',
           }}
         >
-          {displayWorkspace}
+          {currentWorkspace}
         </div>
       )}
       <div className="explorer-tree">

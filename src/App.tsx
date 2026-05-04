@@ -136,8 +136,8 @@ export default function App() {
       />
 
       <div className="main-layout">
-        {/* Left sidebar (Explorer/Search) */}
-        {mainTab !== 'editor' && mainTab !== 'workflow' && (
+        {/* Left sidebar (Explorer only - search shows in center) */}
+        {mainTab === 'explorer' && (
           <>
             <div className="sidebar" style={{ width: sidebarWidth }}>
               <div className="sidebar-header">
@@ -154,7 +154,9 @@ export default function App() {
         {/* Center column: editor + terminal */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
           <div className="center-content" style={{ flex: 1 }}>
-            {mainTab === 'workflow' ? (
+            {mainTab === 'search' ? (
+              <Search />
+            ) : mainTab === 'workflow' ? (
               <WorkflowEditor />
             ) : (
               <Editor />

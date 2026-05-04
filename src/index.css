@@ -82,6 +82,15 @@ code { font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace; }
   overflow: hidden;
 }
 
+/* Animations */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.spin {
+  animation: spin 1s linear infinite;
+}
+
 /* Title Bar */
 .titlebar {
   height: 38px;
@@ -94,6 +103,8 @@ code { font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace; }
   flex-shrink: 0;
   user-select: none;
   z-index: 100;
+  position: relative;
+  -webkit-app-region: drag;
 }
 .titlebar-logo {
   display: flex;
